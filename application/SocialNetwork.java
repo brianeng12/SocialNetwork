@@ -1,12 +1,20 @@
 package application;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 
-public class SocialNetwork {
+public class SocialNetwork implements SocialNetworkADT{
 	
+	Graph graph = new Graph();
+	Person selectedUser;
+
 	/**
 	 * Takes two users and makes them friends. 
 	 * 
@@ -16,16 +24,16 @@ public class SocialNetwork {
 	 */
 	public boolean addFriends(String user1, String user2) {
 	
-		if (!graph.getAllNodes().containsKey(user1) || 
-				!graph.getAllNodes().containsKey(user2)) {
-			return false;
-		}
-		
 		Person p1 = graph.getNode(user1);
 		Person p2 = graph.getNode(user2);
+
+		// checks are handled by Graph
+		// if (!graph.getAllNodes().contains(p1) || 
+		// 		!graph.getAllNodes().contains(p2)) {
+		// 	return false;
+		// }
 		
-		graph.addEdge(p1, p2);
-		return true;
+		return graph.addEdge(p1, p2);
 	}
 	
 	/**
@@ -37,16 +45,15 @@ public class SocialNetwork {
 	 */
 	public boolean removeFriends(String user1, String user2) {
 		
-		if (!graph.getAllNodes().containsKey(user1) || 
-				!graph.getAllNodes().containsKey(user2)) {
-			return false;
-		}
-		
 		Person p1 = graph.getNode(user1);
 		Person p2 = graph.getNode(user2);
+
+		// if (!graph.getAllNodes().contains(p1) || 
+		// 		!graph.getAllNodes().contains(p2)) {
+		// 	return false;
+		// }
 		
-		graph.removeEdge(p1, p2);
-		return true;
+		return graph.removeEdge(p1, p2);
 	}
 	
 	/**
@@ -57,15 +64,9 @@ public class SocialNetwork {
 	 */
 	public boolean addUser(String user) {
 		
-		
-		if (graph.getAllNodes().containsKey(user)) {
-			return false;
-		}
-		
 		Person p = graph.getNode(user);
 			
-		graph.addNode(p);
-		return true;
+		return graph.addNode(p);
 	}
 	
 	/**
@@ -75,15 +76,10 @@ public class SocialNetwork {
 	 * @return true if user is removed from Social network, false otherwise
 	 */
 	public boolean removeUser(String user) {
-		 
-		if (!graph.getAllNodes().containsKey(user)) {
-			return false; 
-		}
-		
+
 		Person p = graph.getNode(user);
 	
-		graph.removeNode(p);
-		return true;
+		return graph.removeNode(p);
 	}
 	
 	/**
@@ -93,10 +89,6 @@ public class SocialNetwork {
 	 * @return set of user's friends
 	 */
 	public Set<Person> getFriends(String user) {
-		 
-		if (!graph.getAllNodes().containsKey(user)) {
-			return; 
-		}
 		
 		Person p = graph.getNode(user);
 	
@@ -109,14 +101,14 @@ public class SocialNetwork {
 	 * 
 	 * Gets all of the friends between two different friends.
 	 * 
-	 * @param friend1
-	 * @param friend2
+	 * @param user1
+	 * @param user2
 	 * @return - the mutual friends between friend1 and friend2. 
 	 */
-	public Set<Person> getMutualFriends(String friend1, String friend2){
+	public Set<Person> getMutualFriends(String user1, String user2){
 		
-		Person p1 = graph.getNode(friend1);
-		Person p2 = graph.getNode(friend2);
+		Person p1 = graph.getNode(user1);
+		Person p2 = graph.getNode(user2);
 		
 		//Initialize Sets
 		Set<Person> p1Friends = graph.getNeighbors(p1);
@@ -136,8 +128,8 @@ public class SocialNetwork {
 	 */
 	public List<Person> getShortestPath(String user1, String user2){
 		
-		Person p1 = graph.getNode(friend1);
-		Person p2 = graph.getNode(friend2);	
+		Person p1 = graph.getNode(user1);
+		Person p2 = graph.getNode(user2);	
 		
 		HashMap<Person,Person> path = new HashMap<Person,Person>();
 		
@@ -204,8 +196,44 @@ public class SocialNetwork {
 	/**
 	 *  
 	 */
-	public Set<Graph> getNumConnectedComponents() {
+	public Set<Graph> getConnectedComponents() {
+		return null;
 		
+	}
+
+	@Override
+	public void loadFromFile(File f) throws FileNotFoundException {
+		Scanner input = new Scanner(f);
+
+		while (input.hasNextLine()) {
+			String nextLine = input.nextLine();
+			String[] lineArray = nextLine.split(" ",3);
+			switch(lineArray[0]) {
+				case "a":
+					if (lineArray.length > 2) {addFriends(lineArray[1], lineArray[2]);}
+					else {addUser(lineArray[1]);}
+					break;
+				case "r":
+					if (lineArray.length > 2) {removeFriends(lineArray[1], lineArray[2]);}
+					else {removeUser(lineArray[1]);}
+					break;
+				case "s":
+					selectedUser = graph.getNode(lineArray[1]);
+					break;
+				default:
+
+			}
+		}
+		
+		input.close();
+	}
+
+	@Override
+	public void saveToFile(File f) throws IOException {
+		FileWriter output = new FileWriter(f);
+		//TODO: in-order, add users, edges, and set current user
+
+		output.close();
 	}
 	
 }
