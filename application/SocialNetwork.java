@@ -13,6 +13,7 @@ import java.util.Set;
 public class SocialNetwork implements SocialNetworkADT{
 	
 	Graph graph = new Graph();
+	ArrayList<String> commands = new ArrayList<String>();
 	Person selectedUser;
 
 	/**
@@ -208,6 +209,7 @@ public class SocialNetwork implements SocialNetworkADT{
 
 		while (input.hasNextLine()) {
 			String nextLine = input.nextLine();
+			commands.add(nextLine);
 			String[] lineArray = nextLine.split(" ",3);
 			switch(lineArray[0]) {
 				case "a":
@@ -222,7 +224,7 @@ public class SocialNetwork implements SocialNetworkADT{
 					selectedUser = graph.getNode(lineArray[1]);
 					break;
 				default:
-
+					System.out.println("Invalid command.");
 			}
 		}
 		
@@ -232,7 +234,10 @@ public class SocialNetwork implements SocialNetworkADT{
 	@Override
 	public void saveToFile(File f) throws IOException {
 		FileWriter output = new FileWriter(f);
-		//TODO: in-order, add users, edges, and set current user
+		 for (int i = 0 ; i < commands.size(); i++)
+	  	  {
+	    	output.write(commands.get(i) + "\n");
+	   	 }
 
 		output.close();
 	}
