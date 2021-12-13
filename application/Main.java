@@ -76,7 +76,6 @@ public class Main extends Application {
 
 	@Override
 	public void start(Stage arg0) throws Exception {
-		ManagerClass manager = new ManagerClass();
 		BorderPane root = new BorderPane();
 		HBox topRow = new HBox();
 		//BorderPane networkDisplay = new BorderPane();
@@ -85,7 +84,7 @@ public class Main extends Application {
 		Stage primaryStage = new Stage();
 		Scene mainScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 		FindConnectView findConnectView = new FindConnectView();
-		FindConnectController findConnectControl = new FindConnectController(findConnectView, manager, mainScene);
+		FindConnectController findConnectControl = new FindConnectController(findConnectView, SocialNetwork, mainScene);
 		
 		findConnectControl.initialize();
 		Scene findConnectScene = new Scene(findConnectView.getView(), WINDOW_WIDTH, WINDOW_HEIGHT);
