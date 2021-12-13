@@ -223,7 +223,7 @@ public class SocialNetwork implements SocialNetworkADT{
 					selectedUser = graph.getNode(lineArray[1]);
 					break;
 				default:
-
+					System.out.println("Invalid command.");
 			}
 		}
 		
