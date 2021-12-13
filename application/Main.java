@@ -13,9 +13,9 @@
 
 package application;
 
-import java.util.ArrayList;
-
+import java.util.Set;
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -25,6 +25,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -43,42 +45,52 @@ public class Main extends Application {
 	private static final Font LABEL_FONT = new Font("Arial", 20);
 	private static final int SMALL_SPACING = 4;
 	private static final int BUTTON_WIDTH = 150;
-	private static final String DEFAULT_NUM_GROUP = "No friendships entered";
-	
-	private ArrayList<Person> network = new ArrayList<Person>();
-	
-	private class Person {
-		String name;
-		ArrayList<Person> friends = new ArrayList<Person>();
-		Circle displayShape = null;
+	private static final String DEFAULT_NUM_GROUP = "Nobody entered yet";
+	private static final int MIN_USER_NAME_WIDTH = 250;
+	private enum ACTIONS {
+		NONE("No action taken"),
+		ADDPERSON("Added user"),
+		REMOVEPERSON("Removed user"),
+		ADDFRIENDSHIP("Added friendship"),
+		REMOVEFRIENDSHIP("Removed friendship"),
+		RESET("Rest Social Network");
 		
-		private Person(String name) {
-			this.name = name;
-			this.displayShape = new Circle(30, Color.BLACK);
+		private String action;
+
+		ACTIONS(String string) {
+			this.action = string;
 		}
 		
-		private Person() {
-			this("ExampleName" + network.size());
+		private String getAction() {
+			return this.action;
 		}
 	}
+
+	
+	private SocialNetwork SocialNetwork = new SocialNetwork();
+	private String center = null;
+	private Label LastActionDisplayLabel = new Label("No action taken");
+	private BorderPane NetworkDisplay = new BorderPane();
+	private Label NumberOfPeopleDisplayLabel = new Label(DEFAULT_NUM_GROUP);
+	private int NumberOfPeople = 0;
 
 	@Override
 	public void start(Stage arg0) throws Exception {
 		ManagerClass manager = new ManagerClass();
 		BorderPane root = new BorderPane();
 		HBox topRow = new HBox();
-		BorderPane networkDisplay = new BorderPane();
+		//BorderPane networkDisplay = new BorderPane();
 		VBox leftColumn = new VBox();
-		Label numberOfGroupsLabel = new Label("Number of Groups");
-		Label numberOfGroupsValue = new Label(DEFAULT_NUM_GROUP);
+		Label numberOfGroupsLabel = new Label("Number of People");
 		Stage primaryStage = new Stage();
-		Label lastActionStatus = new Label("No action taken");
 		Scene mainScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 		FindConnectView findConnectView = new FindConnectView();
 		FindConnectController findConnectControl = new FindConnectController(findConnectView, manager, mainScene);
 		
 		findConnectControl.initialize();
 		Scene findConnectScene = new Scene(findConnectView.getView(), WINDOW_WIDTH, WINDOW_HEIGHT);
+		
+		LastActionDisplayLabel.setUserData(arg0);
 		
 		/*
 		 * setup the top row with buttons
@@ -91,16 +103,7 @@ public class Main extends Application {
 		Button loadButton = new Button("Load");
 		loadButton.setPrefWidth(BUTTON_WIDTH);
 		loadButton.setOnMouseClicked(x -> {
-			network.clear();
-			networkDisplay.getChildren().clear();
-			Person person = null;
-			for(int i = 0; i < 3; i++) {
-				person = new Person();
-				network.add(person);
-				reloadNetwork(networkDisplay, person);
-			}
-			updateNumberOfGroups(numberOfGroupsValue);
-			updateLastAction(lastActionStatus, "Added " + person.name);
+			//TODO - implement
 		});
 		
 		/*
@@ -115,11 +118,13 @@ public class Main extends Application {
 		Button clearAllButton = new Button("Clear All");
 		clearAllButton.setPrefWidth(BUTTON_WIDTH);
 		clearAllButton.setOnMouseClicked(x -> { 
-			network.clear();
-			networkDisplay.getChildren().clear();
-			updateNumberOfGroups(numberOfGroupsValue);
-			updateLastAction(lastActionStatus, "Cleared everyone");
-			});
+			SocialNetwork = new SocialNetwork();
+			NumberOfPeople = 0;
+			center = null;
+			reloadNetwork();
+			updateNumberOfGroups();
+			updateLastAction(ACTIONS.RESET, null, null);
+		});
 		
 		/*
 		 * add person button should allow a new person to be added
@@ -127,11 +132,26 @@ public class Main extends Application {
 		Button addPersonButton = new Button("Add Person");
 		addPersonButton.setPrefWidth(BUTTON_WIDTH);
 		addPersonButton.setOnMouseClicked( x -> {
-			Person person = new Person();
-			network.add(person);
-			reloadNetwork(networkDisplay, person);
-			updateNumberOfGroups(numberOfGroupsValue);
-			updateLastAction(lastActionStatus, "Added " + person.name);
+			Stage stage = new Stage();
+			stage.setTitle("Add a new person");
+			BorderPane pane = new BorderPane();
+			TextField newUserField = new TextField();
+			newUserField.setPromptText("Enter the new person's name");
+			newUserField.setMinWidth(MIN_USER_NAME_WIDTH);
+			Button addButton = new Button("Add");
+			addButton.setOnMouseClicked(y -> {
+				addPersonOnClick(newUserField.getText());
+				stage.close();
+			});
+			HBox hbox = new HBox();
+			hbox.getChildren().addAll(newUserField, addButton);
+			hbox.setSpacing(SMALL_SPACING);
+			hbox.setPadding(PADDING);
+			hbox.setAlignment(Pos.CENTER);
+			pane.setCenter(hbox);
+			Scene scene = new Scene(pane, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+			stage.setScene(scene);
+			stage.show();
 			});
 		
 		/*
@@ -139,12 +159,91 @@ public class Main extends Application {
 		 */
 		Button undo = new Button("Undo");
 		undo.setPrefWidth(BUTTON_WIDTH);
+		undo.setOnMouseClicked(x -> {
+			ACTIONS action = (ACTIONS) LastActionDisplayLabel.getProperties().get("action");
+			if(action != ACTIONS.NONE && action != ACTIONS.RESET) {
+				String user1 = (String) LastActionDisplayLabel.getProperties().get("user1");
+				if(action == ACTIONS.ADDPERSON) {
+					if(SocialNetwork.removeUser(user1)) {
+						if(center.equals(user1))
+							center = null;
+						reloadNetwork();
+						updateLastAction(ACTIONS.REMOVEPERSON, user1, null);
+					}
+				}
+				else if(action == ACTIONS.REMOVEPERSON) {
+					addPersonOnClick(user1);
+				}
+				else {
+					String user2 = (String) LastActionDisplayLabel.getProperties().get("user2");
+					if(action == ACTIONS.ADDFRIENDSHIP) {
+						removeFriendshipOnClick(user1, user2);
+					}
+					else if(action == ACTIONS.REMOVEFRIENDSHIP) {
+						addFriendshipOnClick(user1, user2);
+					}
+				}
+			}
+		});
 		
 		/*
-		 * TODO: implement
+		 * button to change a friendship
+		 * opens a separate pane to collect two people's names and 
+		 * whether to add or remove a friendship
 		 */
 		Button changeFriendshipButton = new Button("Change Friendship");
 		changeFriendshipButton.setPrefWidth(BUTTON_WIDTH);
+		changeFriendshipButton.setOnMouseClicked( x -> {
+			Stage stage = new Stage();
+			stage.setTitle("Change friendship");
+			BorderPane pane = new BorderPane();
+			TextField userField1 = new TextField();
+			userField1.setPromptText("Enter a person's name");
+			userField1.setMinWidth(MIN_USER_NAME_WIDTH);
+			Button addButton = new Button("Add friendship");
+			TextField userField2 = new TextField();
+			userField2.setPromptText("Enter a person's name");
+			userField2.setMinWidth(MIN_USER_NAME_WIDTH);
+			
+			addButton.setOnMouseClicked(y -> {
+				addFriendshipOnClick(userField1.getText(), userField2.getText());
+				stage.close();
+			});
+			HBox hbox1 = new HBox();
+			hbox1.getChildren().addAll(userField1);
+			hbox1.setSpacing(SMALL_SPACING);
+			hbox1.setPadding(PADDING);
+			hbox1.setAlignment(Pos.CENTER);
+			
+			
+
+			Button removeButton = new Button("Remove friendship");
+			removeButton.setOnMouseClicked(z -> {
+				String user1 = userField1.getText();
+				String user2 = userField2.getText();
+				removeFriendshipOnClick(userField1.getText(), userField2.getText());
+				stage.close();
+			});
+			HBox hbox2 = new HBox();
+			hbox2.getChildren().addAll(userField2);
+			hbox2.setSpacing(SMALL_SPACING);
+			hbox2.setPadding(PADDING);
+			hbox2.setAlignment(Pos.CENTER);
+			
+			
+			HBox hbox3 = new HBox();
+			hbox3.getChildren().addAll(addButton, removeButton);
+			hbox3.setSpacing(SMALL_SPACING);
+			hbox3.setPadding(PADDING);
+			hbox3.setAlignment(Pos.CENTER);
+			
+			VBox vbox = new VBox();
+			vbox.getChildren().addAll(hbox1, hbox2, hbox3);
+			pane.setCenter(vbox);
+			Scene scene = new Scene(pane, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+			stage.setScene(scene);
+			stage.show();
+			});
 		
 		/*
 		 * find connections button should load separate scene
@@ -174,8 +273,8 @@ public class Main extends Application {
 		numberOfGroups.setPrefSize(400, 200);
 		numberOfGroupsLabel.setFont(LABEL_FONT);
 		numberOfGroups.getChildren().add(numberOfGroupsLabel);
-		numberOfGroupsValue.setFont(new Font("Arial", 32));
-		numberOfGroups.getChildren().add(numberOfGroupsValue);
+		NumberOfPeopleDisplayLabel.setFont(new Font("Arial", 32));
+		numberOfGroups.getChildren().add(NumberOfPeopleDisplayLabel);
 		numberOfGroups.setAlignment(Pos.CENTER);
 		
 		/*
@@ -183,9 +282,10 @@ public class Main extends Application {
 		 */
 		VBox mutualFriends = new VBox();
 		mutualFriends.setPrefSize(400, 400);
-		TableView<String> mutualFriendsTable = new TableView<String>();
+		TableView<Person> mutualFriendsTable = new TableView<Person>();
 		mutualFriendsTable.setPrefHeight(350);
 		TableColumn mutualFriendsColumn = new TableColumn("Mutual Friends");
+		mutualFriendsColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
 		mutualFriendsColumn.setPrefWidth(400);
 		mutualFriendsTable.getColumns().add(mutualFriendsColumn);
 		mutualFriendsTable.setPlaceholder(new Label("No friendships to show"));
@@ -196,6 +296,16 @@ public class Main extends Application {
 		person2.setPrefWidth(125);
 		person2.setPromptText("Enter person name");
 		Button searchForMutuals = new Button("Search");
+		searchForMutuals.setOnMouseClicked(x -> {
+			String user1 = person1.getText();
+			String user2 = person2.getText();
+			if(user1 != null && user2 != null) {
+				Set<Person> mutuals = SocialNetwork.getMutualFriends(user1, user2);
+				for(Person person : mutuals) {
+					mutualFriendsTable.getItems().add(person);
+				}
+			}
+		});
 		HBox searchBoxes = new HBox();
 		searchBoxes.setPadding(PADDING);
 		searchBoxes.setSpacing(SMALL_SPACING);
@@ -208,10 +318,10 @@ public class Main extends Application {
 		HBox statusBox = new HBox();
 		Label statusLabel = new Label("Status:");
 		statusLabel.setFont(LABEL_FONT);
-		lastActionStatus.setFont(LABEL_FONT);
+		LastActionDisplayLabel.setFont(LABEL_FONT);
 		statusBox.setPadding(PADDING);
 		statusBox.setSpacing(SMALL_SPACING);
-		statusBox.getChildren().addAll(statusLabel, lastActionStatus);
+		statusBox.getChildren().addAll(statusLabel, LastActionDisplayLabel);
 		
 		/*
 		 * add boxes to column
@@ -231,15 +341,19 @@ public class Main extends Application {
 		
 		VBox networkBox = new VBox();
 		networkBox.setPrefSize(800, 500);
-		networkDisplay.setPrefSize(800, 450);
+		NetworkDisplay.setPrefSize(800, 450);
 		Label networkLabel = new Label("No friendships have been loaded");
-		networkDisplay.setCenter(networkLabel);
+		NetworkDisplay.setCenter(networkLabel);
 		
 		HBox bottomRow = new HBox();
 		TextField searchField = new TextField();
 		searchField.setPromptText("Enter a name to search for");
-		searchField.setMinWidth(250);
+		searchField.setMinWidth(MIN_USER_NAME_WIDTH);
 		Button searchButton = new Button("Search");
+		searchButton.setOnMouseClicked( x -> {
+			center = searchField.getText();
+			reloadNetwork();
+		});
 		bottomRow.getChildren().addAll(searchField, searchButton);
 		bottomRow.setSpacing(SMALL_SPACING);
 		bottomRow.setPadding(PADDING);
@@ -248,7 +362,7 @@ public class Main extends Application {
 		/*
 		 * add everything to main box
 		 */
-		mainBox.getChildren().addAll(mainHeader, networkDisplay, bottomRow);
+		mainBox.getChildren().addAll(mainHeader, NetworkDisplay, bottomRow);
 		
 		root.setTop(topRow);
 		root.setLeft(leftColumn);
@@ -271,26 +385,9 @@ public class Main extends Application {
 	 * makes the center argument the center of the display and displays the adjacent 
 	 * people as well
 	 */
-	private void reloadNetwork(BorderPane display, Person center) {
-		Bounds bounds = display.localToScreen(display.getBoundsInLocal());
+	private void reloadNetwork() {
+		Bounds bounds = NetworkDisplay.localToScreen(NetworkDisplay.getBoundsInLocal());
 		StackPane stackPane = new StackPane();
-		Label label = new Label(center.name);
-		label.setTextFill(Color.WHITE);
-		label.setWrapText(true);
-		center.displayShape.radiusProperty().bind(label.widthProperty());
-		
-		/*
-		 * store some of the top and center coordinates for easier use later
-		 */
-		double topX = bounds.getMinX();
-		double topY = bounds.getMinY();
-		double centerX = topX + (bounds.getWidth() / 2);
-		double centerY = topY + (bounds.getHeight() / 2);
-		double circleX = centerX;
-		double circleY = centerY;
-		center.displayShape.relocate(circleX, circleY);
-		stackPane.getChildren().addAll(center.displayShape, label);
-		
 		HBox topBox = new HBox();
 		HBox centerBox = new HBox();
 		HBox bottomBox = new HBox();
@@ -323,56 +420,131 @@ public class Main extends Application {
 		topBox.setSpacing(25);
 		bottomBox.setAlignment(Pos.CENTER);
 		bottomBox.setSpacing(25);
-		
-		
-		for(int i = 0; i < network.size(); i++) {
-			if(network.get(i) == center)
-				continue;
-			
-			label = new Label(network.get(i).name);
+		if(center != null) {
+			Label label = new Label(center);
 			label.setTextFill(Color.WHITE);
-			network.get(i).displayShape.radiusProperty().unbind();
-			network.get(i).displayShape.setRadius(50);
-			stackPane = new StackPane();
-			stackPane.getChildren().addAll(network.get(i).displayShape, label);
+			label.setWrapText(true);
+			Circle centerCircle = new Circle(50, Color.BLACK);
 			
 			/*
-			 * based on the number of people loaded,
-			 * add the new node to one of the sections of the pane
-			 * the top and bottom can hold more than the left and right
+			 * store some of the top and center coordinates for easier use later
 			 */
-			if(i < (2 * network.size() / 5))
-				topBox.getChildren().add(stackPane);
-			else if (i < 4 * network.size() / 5)
-				bottomBox.getChildren().add(stackPane);
-			else if (i < (9 * network.size() / 10))
-				leftBox.getChildren().add(stackPane);
-			else
-				rightBox.getChildren().add(stackPane);
+			double topX = bounds.getMinX();
+			double topY = bounds.getMinY();
+			double centerX = topX + (bounds.getWidth() / 2);
+			double centerY = topY + (bounds.getHeight() / 2);
+			double circleX = centerX;
+			double circleY = centerY;
+			centerCircle.relocate(circleX, circleY);
+			stackPane.getChildren().addAll(centerCircle, label);
+			
+			/*
+			 * go through the friends list and display them as well
+			 */
+			Set<Person> friends = SocialNetwork.getFriends(center);
+			if(friends != null && !friends.isEmpty()) {
+				int numberOfFriends = friends.size();
+				int counter = 0;
+				for(Person friend : friends) {
+					label = new Label(friend.Name);
+					label.setTextFill(Color.WHITE);
+					Circle friendCircle = new Circle(30, Color.BLACK);
+					stackPane = new StackPane();
+					stackPane.getChildren().addAll(friendCircle, label);
 				
+					/*
+					 * based on the number of people loaded,
+					 * add the new node to one of the sections of the pane
+					 * the top and bottom can hold more than the left and right
+					 */
+					if(counter < (2 * numberOfFriends / 5))
+						topBox.getChildren().add(stackPane);
+					else if (counter < 4 * numberOfFriends / 5)
+						bottomBox.getChildren().add(stackPane);
+					else if (counter < (9 * numberOfFriends / 10))
+						leftBox.getChildren().add(stackPane);
+					else
+						rightBox.getChildren().add(stackPane);
+					counter++;
+						
+				}
+			}
 		}
 		
 		/*
 		 * add all of the sections
 		 */
-		display.setTop(topBox);
-		display.setCenter(centerBox);
-		display.setBottom(bottomBox);
-		display.setLeft(leftBox);
-		display.setRight(rightBox);
+		NetworkDisplay.setTop(topBox);
+		NetworkDisplay.setCenter(centerBox);
+		NetworkDisplay.setBottom(bottomBox);
+		NetworkDisplay.setLeft(leftBox);
+		NetworkDisplay.setRight(rightBox);
 	}
 	
 	/*
 	 * private helper method to update the number of groups that have been entered
 	 */
-	private void updateNumberOfGroups(Label label) {
-		label.setText(network.size() > 0 ? network.size() + "" : DEFAULT_NUM_GROUP);
+	private void updateNumberOfGroups() {
+		NumberOfPeopleDisplayLabel.setText(NumberOfPeople > 0 ? NumberOfPeople + "" : DEFAULT_NUM_GROUP);
 	}
 	
 	/*
 	 * private helper method to update the last action label
 	 */
-	private void updateLastAction(Label label, String text) {
-		label.setText(text.isEmpty() ? "No action taken" : text);
+	private void updateLastAction(ACTIONS action, String user1, String user2) {
+		String display;
+		switch (action) {
+		case ADDPERSON: display = action.getAction() + " " + user1;
+			break;
+		case REMOVEPERSON:; display = action.getAction() + " " + user1;
+			break;
+		case ADDFRIENDSHIP: display = action.getAction() + 
+				" for " + user1 + " and " + user2;
+			break;
+		case REMOVEFRIENDSHIP: display = action.getAction() +  
+				" for " + user1 + " and " + user2;
+			break;
+		case RESET: display = action.getAction();
+			break;
+		default: display = ACTIONS.NONE.getAction();
+		}
+		LastActionDisplayLabel.setText(display);
+		LastActionDisplayLabel.getProperties().put("action", action);
+		LastActionDisplayLabel.getProperties().put("user1", user1);
+		LastActionDisplayLabel.getProperties().put("user2", user2);
+	}
+	
+	private EventHandler<? super MouseEvent> addPersonOnClick(String user) {
+		if(SocialNetwork.addUser(user)) {
+			NumberOfPeople++;
+			if(center == null)
+				center = user;
+			reloadNetwork();
+			updateNumberOfGroups();
+			updateLastAction(ACTIONS.ADDPERSON, user, null);
+		}
+		return null;
+	}
+	
+	private EventHandler<? super MouseEvent> addFriendshipOnClick(String user1,
+			String user2) {
+		if(SocialNetwork.addFriends(user1, user2) &&
+				SocialNetwork.addFriends(user2, user1)) {
+			reloadNetwork();
+			updateLastAction(ACTIONS.ADDFRIENDSHIP, user1, user2);
+		}
+		
+		return null;
+	}
+	
+	private EventHandler<? super MouseEvent> removeFriendshipOnClick(String user1,
+			String user2) {
+		if(SocialNetwork.removeFriends(user1, user2) &&
+				SocialNetwork.removeFriends(user2, user1)) {
+			reloadNetwork();
+			updateLastAction(ACTIONS.REMOVEFRIENDSHIP, user1, user2);
+		}
+		
+		return null;
 	}
 }
