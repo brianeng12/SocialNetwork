@@ -64,7 +64,8 @@ public class SocialNetwork implements SocialNetworkADT{
 	 */
 	public boolean addUser(String user) {
 		
-		Person p = graph.getNode(user);
+		//Person p = graph.getNode(user);
+		Person p = new Person(user);
 			
 		return graph.addNode(p);
 	}

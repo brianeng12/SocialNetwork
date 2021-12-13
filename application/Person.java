@@ -18,4 +18,8 @@ public class Person{
     public Person(String userName) {
         this.Name = userName;
     }
+    
+    public String getName() {
+    	return this.Name;
+    }
 }
