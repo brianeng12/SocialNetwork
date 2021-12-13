@@ -6,12 +6,9 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
+import javafx.scene.layout.Pane;
 
 public class FindConnectView {
 	
@@ -24,7 +21,8 @@ public class FindConnectView {
 	
 	Button backBtn = new Button("Back");
 	Label title = new Label("Friend Connection");
-	StackPane connectPane = new StackPane();
+//	GridPane connectPane = new GridPane();
+	Pane connectPane = new Pane();
 	Label lPerson1 = new Label("Person 1:");
 	Label lPerson2 = new Label("Person 2:");
 	TextField tbPerson1 = new TextField();
@@ -39,6 +37,7 @@ public class FindConnectView {
 		
 		BorderPane.setAlignment(backBtn, Pos.CENTER_LEFT);
 		BorderPane.setAlignment(title, Pos.CENTER);
+		BorderPane.setAlignment(connectPane, Pos.CENTER_LEFT);
 		
 		BorderPane bp = new BorderPane();
 		BorderPane bpTop = new BorderPane();
@@ -53,7 +52,7 @@ public class FindConnectView {
 		hbox2.setSpacing(SMALL_SPACING);
 		
 		connectPane.setStyle("-fx-border-color: black");
-
+		
 		bp.setPrefWidth(WINDOW_WIDTH);
 		bp.setPrefHeight(WINDOW_HEIGHT);
 
