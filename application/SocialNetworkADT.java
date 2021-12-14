@@ -35,7 +35,7 @@ public interface SocialNetworkADT {
 
     public List<Person> getShortestPath(String s1, String s2);
 
-    public Set<Graph> getConnectedComponents();
+    public int getConnectedComponents();
 
     public void loadFromFile(File f) throws FileNotFoundException;
 
