@@ -196,12 +196,51 @@ public class SocialNetwork implements SocialNetworkADT{
 	}
 	
 	/**
-	 *  
+	 * Groups in the social network
+	 * 
+	 * @return - Number of connected components (groups) in the social network
 	 */
-	public Set<Graph> getConnectedComponents() {
-		return null;
+	public int getConnectedComponents() {
+		ArrayList<ArrayList<Person>> connectedComponents = new ArrayList<ArrayList<Person>>();
 		
+		Set<Person> people = graph.getAllNodes();
+		
+		HashMap<Person, Boolean> visitedPerson = new HashMap<Person, Boolean>(graph.order());
+		for (Person p : people)
+		{
+			visitedPerson.put(p, false);
+		}
+		
+		for(Person p : people)
+		{
+			if (!visitedPerson.get(p))
+			{
+				ArrayList<Person> components = new ArrayList<Person>();
+				DFS(visitedPerson, components, p);
+				connectedComponents.add(components);
+			}
+		}
+	
+		return connectedComponents.size();	
 	}
+	
+	/***
+	 * DFS algorithm 
+	 * 
+	 * @param visitedPerson - track visited persons
+	 * @param components - groups
+	 * @param p1 - person to begin DFS
+	 */
+	private void DFS(HashMap <Person, Boolean> visitedPerson, ArrayList<Person> components, Person p1) {
+		visitedPerson.put(p1, true);
+		components.add(p1);
+		for (Person p2 : graph.getNeighbors(p1)) {
+			if (!visitedPerson.get(p2)) {
+				DFS(visitedPerson,components,p2);
+			}
+		}
+	}
+
 
 	@Override
 	public void loadFromFile(File f) throws FileNotFoundException {
