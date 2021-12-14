@@ -3,11 +3,13 @@ package application;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -55,12 +57,7 @@ public class FindConnectController {
 			}
 			
 			else  {
-				//TODO: Add back after ManagerClass is implemented
-//				connections = socialNetwork.getShortestPath(person1, person2);
-				connections.add(new Person("Chris"));
-				connections.add(new Person("Brian"));
-				connections.add(new Person("Bill"));
-				connections.add(new Person("Ben"));
+				connections = socialNetwork.getShortestPath(person1, person2);
 				if (connections.isEmpty()) view.connectPane.getChildren().add(new Label("No connection found"));
 				else loadConnections(connections);
 			}
@@ -88,30 +85,26 @@ public class FindConnectController {
 	 * @param connections: List of Persons connecting user 1 to user 2
 	 */
 	private void loadConnections(List<Person> connections) {
-		Double width = view.connectPane.getWidth();
-		Double height = view.connectPane.getHeight();
-		int numConnections = connections.size();
-		Double circleRadius = width/(numConnections*3 + 1);
+		Double circleRadius = 40.00;
+		view.connectPane.setAlignment(Pos.CENTER);
 		
 		for (int i = 0; i < connections.size(); i++) {
-			Circle userCircle = new Circle((2 + 3*i)*circleRadius, height/2, 
-					circleRadius, Color.BLACK);
+			Circle userCircle = new Circle(circleRadius, Color.BLACK);
 			Label userName = new Label(connections.get(i).Name);
 			userName.setTextFill(Color.WHITE);
-
-			view.connectPane.getChildren().add(userCircle);
-			view.connectPane.getChildren().add(userName);
+			userName.setStyle("-fx-font-size: 15px;"
+					+ "-fx-font-weight: bold;");
 			
-			userName.relocate((2 + 3*i)*circleRadius - userName.getHeight()/2, (height-userName.getHeight())/2);
+			StackPane node = new StackPane();
+			node.getChildren().addAll(userCircle, userName);
+			
+			view.connectPane.add(node, 2*i, 0);
 			
 			if (i < connections.size()-1) {
-				Line line = new Line((3 + 3*i)*circleRadius, height/2, (4 + 3*i)*circleRadius
-						, view.connectPane.getHeight()/2);
-				view.connectPane.getChildren().add(line);
+				Line line = new Line(0, 0, circleRadius, 0);
+				view.connectPane.add(line, 2*i+1, 0);
 			}
-			
 		}
-		
 	}
 
 	/**
@@ -122,6 +115,5 @@ public class FindConnectController {
 	private boolean validatePerson(String person) {
 		if (person == null || person.isEmpty()) return false;
 		return true;
-		//return networkManager.network.inNetwork(person);
 	}
 }

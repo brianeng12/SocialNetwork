@@ -5,10 +5,11 @@ import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 
 public class FindConnectView {
 	
@@ -21,13 +22,13 @@ public class FindConnectView {
 	
 	Button backBtn = new Button("Back");
 	Label title = new Label("Friend Connection");
-//	GridPane connectPane = new GridPane();
-	Pane connectPane = new Pane();
+	GridPane connectPane = new GridPane();
 	Label lPerson1 = new Label("Person 1:");
 	Label lPerson2 = new Label("Person 2:");
 	TextField tbPerson1 = new TextField();
 	TextField tbPerson2 = new TextField();
 	Button searchBtn = new Button("Search");
+	ScrollPane scrollPane = new ScrollPane();
 	
 	public FindConnectView() {
 		view = createView();
@@ -51,13 +52,16 @@ public class FindConnectView {
 		hbox2.setPadding(PADDING);
 		hbox2.setSpacing(SMALL_SPACING);
 		
-		connectPane.setStyle("-fx-border-color: black");
+		scrollPane.setStyle("-fx-border-color: black");
+		scrollPane.setContent(connectPane);
+		scrollPane.setFitToWidth(true);
+		scrollPane.setFitToHeight(true);
 		
 		bp.setPrefWidth(WINDOW_WIDTH);
 		bp.setPrefHeight(WINDOW_HEIGHT);
 
 		bp.setTop(bpTop);
-		bp.setCenter(connectPane);
+		bp.setCenter(scrollPane);
 		bp.setBottom(hbox2);
 		
 		bp.setPadding(new Insets(10, 10, 10, 10));
