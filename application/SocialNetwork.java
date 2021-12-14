@@ -26,15 +26,18 @@ public class SocialNetwork implements SocialNetworkADT{
 	public boolean addFriends(String user1, String user2) {
 	
 		Person p1 = graph.getNode(user1);
+		if (p1 == null) {p1 = new Person(user1);}
 		Person p2 = graph.getNode(user2);
+		if (p2 == null) {p2 = new Person(user2);}
 
 		// checks are handled by Graph
 		// if (!graph.getAllNodes().contains(p1) || 
 		// 		!graph.getAllNodes().contains(p2)) {
 		// 	return false;
 		// }
-		
-		return graph.addEdge(p1, p2);
+		boolean result = graph.addEdge(p1, p2);
+		if (result) {commands.add("a "+user1+" "+user2);}
+		return result;
 	}
 	
 	/**
@@ -49,12 +52,9 @@ public class SocialNetwork implements SocialNetworkADT{
 		Person p1 = graph.getNode(user1);
 		Person p2 = graph.getNode(user2);
 
-		// if (!graph.getAllNodes().contains(p1) || 
-		// 		!graph.getAllNodes().contains(p2)) {
-		// 	return false;
-		// }
-		
-		return graph.removeEdge(p1, p2);
+		boolean result = graph.removeEdge(p1, p2);
+		if (result) {commands.add("r "+user1+" "+user2);}
+		return result;
 	}
 	
 	/**
@@ -65,10 +65,12 @@ public class SocialNetwork implements SocialNetworkADT{
 	 */
 	public boolean addUser(String user) {
 		
-		//Person p = graph.getNode(user);
+		if (user == null) {return false;}
 		Person p = new Person(user);
 			
-		return graph.addNode(p);
+		boolean result = graph.addNode(p);
+		if (result) {commands.add("a "+user);}
+		return result;
 	}
 	
 	/**
@@ -79,9 +81,13 @@ public class SocialNetwork implements SocialNetworkADT{
 	 */
 	public boolean removeUser(String user) {
 
+		if (user == null) {return false;}
 		Person p = graph.getNode(user);
-	
-		return graph.removeNode(p);
+		if (p == null) {return false;}
+
+		boolean result = graph.removeNode(p);
+		if (result) {commands.add("r "+user);}
+		return result;
 	}
 	
 	/**
@@ -248,7 +254,6 @@ public class SocialNetwork implements SocialNetworkADT{
 
 		while (input.hasNextLine()) {
 			String nextLine = input.nextLine();
-			commands.add(nextLine);
 			String[] lineArray = nextLine.split(" ",3);
 			switch(lineArray[0]) {
 				case "a":
@@ -266,18 +271,17 @@ public class SocialNetwork implements SocialNetworkADT{
 					System.out.println("Invalid command.");
 			}
 		}
-		
+
 		input.close();
 	}
 
 	@Override
 	public void saveToFile(File f) throws IOException {
 		FileWriter output = new FileWriter(f);
-		 for (int i = 0 ; i < commands.size(); i++)
-	  	  {
+		for (int i = 0 ; i < commands.size(); i++) {
 	    	output.write(commands.get(i) + "\n");
-	   	 }
-
+	   	}
+		output.write("s " + selectedUser);
 		output.close();
 	}
 	

@@ -83,17 +83,22 @@ public class Graph implements GraphADT {
 	 * @return 
      */
 	public boolean removeNode(Person p) {
+          boolean success = false;
           if (p == null) {return false;}
           if (!vertexExists(p)) {return false;}
           int i = 0;
           for (List<Person> nodes : adjacencyList) {
                if (nodes.get(0).equals(p)) {
                     adjacencyList.remove(i);
-                    return true;
+                    success = true;
+               }
+               if (nodes.contains(p)) {
+                    nodes.remove(p);
+                    success = true;
                }
                i++;
           }
-          return false;
+          return success;
 	}
 
 	/**
@@ -111,18 +116,24 @@ public class Graph implements GraphADT {
 	 * @return 
 	 */
 	public boolean addEdge(Person p1, Person p2) {
+          boolean success = false;
 		if (p1 == null || p2 == null) {return false;}
           if (p1.equals(p2)) {return false;} //don't add edge if vertices are the same.
           if (!vertexExists(p1)) {addNode(p1);}
           if (!vertexExists(p2)) {addNode(p2);}
           for (List<Person> nodes : adjacencyList) {
                if (nodes.get(0).equals(p1)) {
-                    if (nodes.contains(p2)) {return false;}
+                    if (nodes.contains(p2)) {continue;}
                     nodes.add(p2);
-                    return true;
+                    success = true;
+               }
+               if (nodes.get(0).equals(p2)) {
+                    if (nodes.contains(p1)) {continue;}
+                    nodes.add(p1);
+                    success = true;
                }
           }
-          return false;
+          return success;
 	}
 	
 	/**
@@ -139,17 +150,23 @@ public class Graph implements GraphADT {
 	 * @return 
      */
 	public boolean removeEdge(Person p1, Person p2) {
+          boolean success = false;
           if (p1 == null || p2 == null) {return false;}
           if (p1.equals(p2)) {return false;}
           if (!(vertexExists(p1) && vertexExists(p2))) {return false;}
           for (List<Person> nodes : adjacencyList) {
                if (nodes.get(0).equals(p1)) {
-                    if (!nodes.contains(p2)) {return false;}
+                    if (!nodes.contains(p2)) {continue;}
                     nodes.remove(p2);
-                    return true;
+                    success = true;
+               }
+               if (nodes.get(0).equals(p2)) {
+                    if (!nodes.contains(p1)) {continue;}
+                    nodes.remove(p1);
+                    success = true;
                }
           }
-          return false;
+          return success;
 	}	
 
 	/**
