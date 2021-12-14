@@ -60,7 +60,7 @@ public class Main extends Application {
 		REMOVEPERSON("Removed user"),
 		ADDFRIENDSHIP("Added friendship"),
 		REMOVEFRIENDSHIP("Removed friendship"),
-		RESET("Rest Social Network");
+		RESET("Reset Social Network");
 		
 		private String action;
 
@@ -87,7 +87,7 @@ public class Main extends Application {
 		HBox topRow = new HBox();
 		//BorderPane networkDisplay = new BorderPane();
 		VBox leftColumn = new VBox();
-		Label numberOfGroupsLabel = new Label("Number of People");
+		Label numberOfGroupsLabel = new Label("Number of Groups");
 		Stage primaryStage = new Stage();
 		Scene mainScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 		FindConnectView findConnectView = new FindConnectView();
@@ -476,9 +476,13 @@ public class Main extends Application {
 				for(Person friend : friends) {
 					label = new Label(friend.Name);
 					label.setTextFill(Color.WHITE);
-					Circle friendCircle = new Circle(30, Color.BLACK);
+					Circle friendCircle = new Circle(30, Color.GRAY);
 					stackPane = new StackPane();
 					stackPane.getChildren().addAll(friendCircle, label);
+					stackPane.setOnMouseClicked(x -> {
+						center = friend.Name;
+						reloadNetwork();
+					});
 				
 					/*
 					 * based on the number of people loaded,
@@ -513,7 +517,8 @@ public class Main extends Application {
 	 * private helper method to update the number of groups that have been entered
 	 */
 	private void updateNumberOfGroups() {
-		NumberOfPeopleDisplayLabel.setText(NumberOfPeople > 0 ? NumberOfPeople + "" : DEFAULT_NUM_GROUP);
+		NumberOfPeopleDisplayLabel.setText(SocialNetwork.getConnectedComponents() > 0 ? 
+				SocialNetwork.getConnectedComponents() + "" : DEFAULT_NUM_GROUP);
 	}
 	
 	/*
@@ -556,9 +561,9 @@ public class Main extends Application {
 	
 	private EventHandler<? super MouseEvent> addFriendshipOnClick(String user1,
 			String user2) {
-		if(SocialNetwork.addFriends(user1, user2) &&
-				SocialNetwork.addFriends(user2, user1)) {
+		if(SocialNetwork.addFriends(user1, user2)) {
 			reloadNetwork();
+			updateNumberOfGroups();
 			updateLastAction(ACTIONS.ADDFRIENDSHIP, user1, user2);
 		}
 		
@@ -567,8 +572,8 @@ public class Main extends Application {
 	
 	private EventHandler<? super MouseEvent> removeFriendshipOnClick(String user1,
 			String user2) {
-		if(SocialNetwork.removeFriends(user1, user2) &&
-				SocialNetwork.removeFriends(user2, user1)) {
+		if(SocialNetwork.removeFriends(user1, user2)) {
+			updateNumberOfGroups();
 			reloadNetwork();
 			updateLastAction(ACTIONS.REMOVEFRIENDSHIP, user1, user2);
 		}
