@@ -13,6 +13,9 @@
 
 package application;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Set;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -20,6 +23,8 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -34,6 +39,8 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 
@@ -85,7 +92,12 @@ public class Main extends Application {
 		Scene mainScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 		FindConnectView findConnectView = new FindConnectView();
 		FindConnectController findConnectControl = new FindConnectController(findConnectView, SocialNetwork, mainScene);
+		FileChooser fileChooser = new FileChooser();
 		
+		//Setup file chooser
+		configureFileChooser(fileChooser);
+		
+		//Initialize and create scene for finding connections between users
 		findConnectControl.initialize();
 		Scene findConnectScene = new Scene(findConnectView.getView(), WINDOW_WIDTH, WINDOW_HEIGHT);
 		
@@ -102,7 +114,13 @@ public class Main extends Application {
 		Button loadButton = new Button("Load");
 		loadButton.setPrefWidth(BUTTON_WIDTH);
 		loadButton.setOnMouseClicked(x -> {
-			//TODO - implement
+			File loadFile = fileChooser.showOpenDialog(primaryStage);
+			if (loadFile != null)
+				try {
+					SocialNetwork.loadFromFile(loadFile);
+				} catch (FileNotFoundException e) {
+					new Alert(AlertType.ERROR, "Unable to import file " + loadFile.getName()).show();
+				}
 		});
 		
 		/*
@@ -110,6 +128,17 @@ public class Main extends Application {
 		 */
 		Button exportButton = new Button("Export");
 		exportButton.setPrefWidth(BUTTON_WIDTH);
+		exportButton.setOnAction(x -> {
+			File saveFile = fileChooser.showSaveDialog(primaryStage);
+			if (saveFile != null) {
+				try {
+					SocialNetwork.saveToFile(saveFile);
+				}
+				catch (IOException e) {
+					new Alert(AlertType.ERROR, "Unable to save file " + saveFile.getName()).show();
+				} 
+			}
+		});
 		
 		/*
 		 * clear all button should reset the network
@@ -545,5 +574,14 @@ public class Main extends Application {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * configureFileChooser: Sets the initial directory and filter extension for loading and saving file
+	 * @param fileChooser: FileChooser to load and save data from app
+	 */
+	private void configureFileChooser(FileChooser fileChooser) {
+		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		fileChooser.getExtensionFilters().add(new ExtensionFilter("txt", "*.txt"));
 	}
 }
