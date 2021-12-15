@@ -160,9 +160,13 @@ public class SocialNetwork implements SocialNetworkADT{
 		ArrayList<Person> shortestPath = new ArrayList<Person>();
 		
 		Person p = p2;
-		shortestPath.add(p2);
+		
 		while (path.get(p) !=null)
 		{
+			if (p == p2)
+			{
+				shortestPath.add(p2);
+			}
 			shortestPath.add(path.get(p));
 			p = path.get(p);
 		}
@@ -301,7 +305,7 @@ public class SocialNetwork implements SocialNetworkADT{
 		for (int i = 0 ; i < commands.size(); i++) {
 	    	output.write(commands.get(i) + "\n");
 	   	}
-		output.write("s " + selectedUser.getName());
+		if (selectedUser != null) {output.write("s " + selectedUser.getName());}
 		output.close();
 	}
 	
