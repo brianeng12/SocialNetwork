@@ -118,6 +118,9 @@ public class Main extends Application {
 			if (loadFile != null)
 				try {
 					SocialNetwork.loadFromFile(loadFile);
+					reloadNetwork();
+					updateNumberOfGroups();
+					center = SocialNetwork.selectedUser.getName();
 				} catch (FileNotFoundException e) {
 					new Alert(AlertType.ERROR, "Unable to import file " + loadFile.getName()).show();
 				}
@@ -148,7 +151,7 @@ public class Main extends Application {
 		clearAllButton.setOnMouseClicked(x -> { 
 			SocialNetwork = new SocialNetwork();
 			NumberOfPeople = 0;
-			center = null;
+			changeCenterUser(null);
 			reloadNetwork();
 			updateNumberOfGroups();
 			updateLastAction(ACTIONS.RESET, null, null);
@@ -194,7 +197,7 @@ public class Main extends Application {
 				if(action == ACTIONS.ADDPERSON) {
 					if(SocialNetwork.removeUser(user1)) {
 						if(center.equals(user1))
-							center = null;
+							changeCenterUser(null);
 						reloadNetwork();
 						updateLastAction(ACTIONS.REMOVEPERSON, user1, null);
 					}
@@ -379,7 +382,7 @@ public class Main extends Application {
 		searchField.setMinWidth(MIN_USER_NAME_WIDTH);
 		Button searchButton = new Button("Search");
 		searchButton.setOnMouseClicked( x -> {
-			center = searchField.getText();
+			changeCenterUser(searchField.getText());
 			reloadNetwork();
 		});
 		bottomRow.getChildren().addAll(searchField, searchButton);
@@ -480,7 +483,7 @@ public class Main extends Application {
 					stackPane = new StackPane();
 					stackPane.getChildren().addAll(friendCircle, label);
 					stackPane.setOnMouseClicked(x -> {
-						center = friend.Name;
+						changeCenterUser(friend.Name);
 						reloadNetwork();
 					});
 				
@@ -551,7 +554,7 @@ public class Main extends Application {
 		if(SocialNetwork.addUser(user)) {
 			NumberOfPeople++;
 			if(center == null)
-				center = user;
+				changeCenterUser(user);
 			reloadNetwork();
 			updateNumberOfGroups();
 			updateLastAction(ACTIONS.ADDPERSON, user, null);
@@ -588,5 +591,10 @@ public class Main extends Application {
 	private void configureFileChooser(FileChooser fileChooser) {
 		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("txt", "*.txt"));
+	}
+	
+	private void changeCenterUser(String user) {
+		center = user;
+		SocialNetwork.selectedUser = new Person(user);
 	}
 }
