@@ -42,6 +42,7 @@ public class FindConnectController {
 			String person1 = view.tbPerson1.getText();
 			String person2 = view.tbPerson2.getText();
 			List<Person> connections = new ArrayList<Person>();
+			view.connectPane.getChildren().clear();
 			
 			if (person1.isEmpty() || person2.isEmpty())  {
 				new Alert(AlertType.ERROR, "Must specify both users").show();
@@ -53,7 +54,7 @@ public class FindConnectController {
 				
 			}
 			else if (!validatePerson(person2)) {
-				new Alert(AlertType.ERROR, person1 + " is not a user in the Social Network").show();
+				new Alert(AlertType.ERROR, person2 + " is not a user in the Social Network").show();
 			}
 			
 			else  {
@@ -114,6 +115,7 @@ public class FindConnectController {
 	 */
 	private boolean validatePerson(String person) {
 		if (person == null || person.isEmpty()) return false;
-		return true;
+		
+		return socialNetwork.personExists(person);
 	}
 }
