@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Collections;
 import java.util.Set;
 
 public class SocialNetwork implements SocialNetworkADT{
@@ -99,7 +100,10 @@ public class SocialNetwork implements SocialNetworkADT{
 	public Set<Person> getFriends(String user) {
 		
 		Person p = graph.getNode(user);
-	
+		if (p == null )
+		{
+			return null;
+		}
 		return graph.getNeighbors(p);
 		
 	}
@@ -117,6 +121,11 @@ public class SocialNetwork implements SocialNetworkADT{
 		
 		Person p1 = graph.getNode(user1);
 		Person p2 = graph.getNode(user2);
+		
+		if (p1 == null || p2 == null )
+		{
+			return null;
+		}
 		
 		//Initialize Sets
 		Set<Person> p1Friends = graph.getNeighbors(p1);
@@ -139,6 +148,11 @@ public class SocialNetwork implements SocialNetworkADT{
 		Person p1 = graph.getNode(user1);
 		Person p2 = graph.getNode(user2);	
 		
+		if (p1 == null || p2 == null )
+		{
+			return null;
+		}
+		
 		HashMap<Person,Person> path = new HashMap<Person,Person>();
 		
 		shortestBFS(p1, p2, path);
@@ -146,11 +160,14 @@ public class SocialNetwork implements SocialNetworkADT{
 		ArrayList<Person> shortestPath = new ArrayList<Person>();
 		
 		Person p = p2;
+		shortestPath.add(p2);
 		while (path.get(p) !=null)
 		{
 			shortestPath.add(path.get(p));
 			p = path.get(p);
 		}
+		
+		Collections.reverse(shortestPath);
 		
 		return shortestPath;
 	}
@@ -192,7 +209,10 @@ public class SocialNetwork implements SocialNetworkADT{
 					
 					
 					if (adjList.get(i) == p2)
-						{return;}
+						{
+						shortestPath.put(p2, p);
+						 return;
+						}
 				}
 			}
 		}
