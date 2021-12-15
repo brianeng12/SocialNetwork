@@ -118,9 +118,9 @@ public class Main extends Application {
 			if (loadFile != null)
 				try {
 					SocialNetwork.loadFromFile(loadFile);
+					if (SocialNetwork.selectedUser != null) center = SocialNetwork.selectedUser.getName();
 					reloadNetwork();
 					updateNumberOfGroups();
-					center = SocialNetwork.selectedUser.getName();
 				} catch (FileNotFoundException e) {
 					new Alert(AlertType.ERROR, "Unable to import file " + loadFile.getName()).show();
 				}
@@ -593,12 +593,12 @@ public class Main extends Application {
 	 * @param fileChooser: FileChooser to load and save data from app
 	 */
 	private void configureFileChooser(FileChooser fileChooser) {
-		fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+		fileChooser.setInitialDirectory(new File(System.getProperty("user.dir")));
 		fileChooser.getExtensionFilters().add(new ExtensionFilter("txt", "*.txt"));
 	}
 	
 	private void changeCenterUser(String user) {
 		center = user;
-		SocialNetwork.selectedUser = new Person(user);
+		SocialNetwork.selectedUser = SocialNetwork.graph.getNode(user);
 	}
 }
