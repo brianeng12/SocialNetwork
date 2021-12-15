@@ -77,9 +77,9 @@ public class Main extends Application {
 	private SocialNetwork SocialNetwork = new SocialNetwork();
 	private String center = null;
 	private Label LastActionDisplayLabel = new Label("No action taken");
+	private Label NetworkLabel = new Label("No friendships have been entered");
 	private BorderPane NetworkDisplay = new BorderPane();
 	private Label NumberOfPeopleDisplayLabel = new Label(DEFAULT_NUM_GROUP);
-	private int NumberOfPeople = 0;
 
 	@Override
 	public void start(Stage arg0) throws Exception {
@@ -150,7 +150,6 @@ public class Main extends Application {
 		clearAllButton.setPrefWidth(BUTTON_WIDTH);
 		clearAllButton.setOnMouseClicked(x -> { 
 			SocialNetwork = new SocialNetwork();
-			NumberOfPeople = 0;
 			changeCenterUser(null);
 			reloadNetwork();
 			updateNumberOfGroups();
@@ -237,6 +236,9 @@ public class Main extends Application {
 			userField2.setMinWidth(MIN_USER_NAME_WIDTH);
 			
 			addButton.setOnMouseClicked(y -> {
+				if(center == null && userField1.getText() != null &&
+						SocialNetwork.personExists(userField1.getText()))
+					center = userField1.getText();
 				addFriendshipOnClick(userField1.getText(), userField2.getText());
 				stage.close();
 			});
@@ -373,8 +375,7 @@ public class Main extends Application {
 		VBox networkBox = new VBox();
 		networkBox.setPrefSize(800, 500);
 		NetworkDisplay.setPrefSize(800, 450);
-		Label networkLabel = new Label("No friendships have been loaded");
-		NetworkDisplay.setCenter(networkLabel);
+		NetworkDisplay.setCenter(NetworkLabel);
 		
 		HBox bottomRow = new HBox();
 		TextField searchField = new TextField();
@@ -382,9 +383,12 @@ public class Main extends Application {
 		searchField.setMinWidth(MIN_USER_NAME_WIDTH);
 		Button searchButton = new Button("Search");
 		searchButton.setOnMouseClicked( x -> {
-			changeCenterUser(searchField.getText());
+			if(searchField.getText() != null &&  
+					SocialNetwork.personExists(searchField.getText()))
+				changeCenterUser(searchField.getText());
 			reloadNetwork();
 		});
+		
 		bottomRow.getChildren().addAll(searchField, searchButton);
 		bottomRow.setSpacing(SMALL_SPACING);
 		bottomRow.setPadding(PADDING);
@@ -552,8 +556,8 @@ public class Main extends Application {
 	
 	private EventHandler<? super MouseEvent> addPersonOnClick(String user) {
 		if(SocialNetwork.addUser(user)) {
-			NumberOfPeople++;
-			if(center == null)
+			if(center == null && user != null &&
+					SocialNetwork.personExists(user))
 				changeCenterUser(user);
 			reloadNetwork();
 			updateNumberOfGroups();

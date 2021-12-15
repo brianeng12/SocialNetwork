@@ -285,4 +285,8 @@ public class SocialNetwork implements SocialNetworkADT{
 		output.close();
 	}
 	
+	public boolean personExists(String user) {
+		return graph.getNode(user) != null ? true : false;
+	}
+	
 }
