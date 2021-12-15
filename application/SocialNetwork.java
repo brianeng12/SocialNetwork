@@ -301,7 +301,7 @@ public class SocialNetwork implements SocialNetworkADT{
 		for (int i = 0 ; i < commands.size(); i++) {
 	    	output.write(commands.get(i) + "\n");
 	   	}
-		output.write("s " + selectedUser.getName());
+		if (selectedUser != null) {output.write("s " + selectedUser.getName());}
 		output.close();
 	}
 	
