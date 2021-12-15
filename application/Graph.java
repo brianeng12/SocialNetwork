@@ -42,7 +42,7 @@ public class Graph implements GraphADT {
 		adjacencyList = new ArrayList<List<Person>>();
 	}
 
-     private boolean vertexExists(Person p) {
+     public boolean vertexExists(Person p) {
           for (List<Person> nodes : adjacencyList) {
                if (nodes.get(0).equals(p)) {return true;}
           }
