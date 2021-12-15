@@ -113,7 +113,7 @@ public class Main extends Application {
 		 */
 		Button loadButton = new Button("Load");
 		loadButton.setPrefWidth(BUTTON_WIDTH);
-		loadButton.setOnMouseClicked(x -> {
+		loadButton.setOnAction(x -> {
 			File loadFile = fileChooser.showOpenDialog(primaryStage);
 			if (loadFile != null)
 				try {
@@ -148,7 +148,7 @@ public class Main extends Application {
 		 */
 		Button clearAllButton = new Button("Clear All");
 		clearAllButton.setPrefWidth(BUTTON_WIDTH);
-		clearAllButton.setOnMouseClicked(x -> { 
+		clearAllButton.setOnAction(x -> { 
 			SocialNetwork = new SocialNetwork();
 			changeCenterUser(null);
 			reloadNetwork();
@@ -161,7 +161,7 @@ public class Main extends Application {
 		 */
 		Button addPersonButton = new Button("Add Person");
 		addPersonButton.setPrefWidth(BUTTON_WIDTH);
-		addPersonButton.setOnMouseClicked( x -> {
+		addPersonButton.setOnAction( x -> {
 			Stage stage = new Stage();
 			stage.setTitle("Add a new person");
 			BorderPane pane = new BorderPane();
@@ -169,7 +169,7 @@ public class Main extends Application {
 			newUserField.setPromptText("Enter the new person's name");
 			newUserField.setMinWidth(MIN_USER_NAME_WIDTH);
 			Button addButton = new Button("Add");
-			addButton.setOnMouseClicked(y -> {
+			addButton.setOnAction(y -> {
 				addPersonOnClick(newUserField.getText());
 				stage.close();
 			});
@@ -189,7 +189,7 @@ public class Main extends Application {
 		 */
 		Button undo = new Button("Undo");
 		undo.setPrefWidth(BUTTON_WIDTH);
-		undo.setOnMouseClicked(x -> {
+		undo.setOnAction(x -> {
 			ACTIONS action = (ACTIONS) LastActionDisplayLabel.getProperties().get("action");
 			if(action != ACTIONS.NONE && action != ACTIONS.RESET) {
 				String user1 = (String) LastActionDisplayLabel.getProperties().get("user1");
@@ -223,7 +223,7 @@ public class Main extends Application {
 		 */
 		Button changeFriendshipButton = new Button("Change Friendship");
 		changeFriendshipButton.setPrefWidth(BUTTON_WIDTH);
-		changeFriendshipButton.setOnMouseClicked( x -> {
+		changeFriendshipButton.setOnAction( x -> {
 			Stage stage = new Stage();
 			stage.setTitle("Change friendship");
 			BorderPane pane = new BorderPane();
@@ -235,7 +235,7 @@ public class Main extends Application {
 			userField2.setPromptText("Enter a person's name");
 			userField2.setMinWidth(MIN_USER_NAME_WIDTH);
 			
-			addButton.setOnMouseClicked(y -> {
+			addButton.setOnAction(y -> {
 				if(center == null && userField1.getText() != null &&
 						SocialNetwork.personExists(userField1.getText()))
 					center = userField1.getText();
@@ -251,7 +251,7 @@ public class Main extends Application {
 			
 
 			Button removeButton = new Button("Remove friendship");
-			removeButton.setOnMouseClicked(z -> {
+			removeButton.setOnAction(z -> {
 				String user1 = userField1.getText();
 				String user2 = userField2.getText();
 				removeFriendshipOnClick(userField1.getText(), userField2.getText());
@@ -289,7 +289,7 @@ public class Main extends Application {
 		
 		Button exitButton = new Button("Exit");
 		exitButton.setPrefWidth(BUTTON_WIDTH);
-		exitButton.setOnMouseClicked(x -> {
+		exitButton.setOnAction(x -> {
 			primaryStage.close();
 		});
 		
@@ -329,7 +329,8 @@ public class Main extends Application {
 		person2.setPrefWidth(125);
 		person2.setPromptText("Enter person name");
 		Button searchForMutuals = new Button("Search");
-		searchForMutuals.setOnMouseClicked(x -> {
+		searchForMutuals.setOnAction(x -> {
+			mutualFriendsTable.getItems().clear();
 			String user1 = person1.getText();
 			String user2 = person2.getText();
 			if(user1 != null && user2 != null) {
@@ -382,7 +383,7 @@ public class Main extends Application {
 		searchField.setPromptText("Enter a name to search for");
 		searchField.setMinWidth(MIN_USER_NAME_WIDTH);
 		Button searchButton = new Button("Search");
-		searchButton.setOnMouseClicked( x -> {
+		searchButton.setOnAction( x -> {
 			if(searchField.getText() != null &&  
 					SocialNetwork.personExists(searchField.getText()))
 				changeCenterUser(searchField.getText());
