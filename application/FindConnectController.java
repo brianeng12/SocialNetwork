@@ -58,7 +58,7 @@ public class FindConnectController {
 			
 			else  {
 				connections = socialNetwork.getShortestPath(person1, person2);
-				if (connections.isEmpty()) view.connectPane.getChildren().add(new Label("No connection found"));
+				if (connections == null) view.connectPane.getChildren().add(new Label("No connection found"));
 				else loadConnections(connections);
 			}
 		});

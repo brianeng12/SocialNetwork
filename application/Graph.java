@@ -87,9 +87,11 @@ public class Graph implements GraphADT {
           if (p == null) {return false;}
           if (!vertexExists(p)) {return false;}
           int i = 0;
+          ArrayList<List<Person>> toRemove = new ArrayList<List<Person>>();
           for (List<Person> nodes : adjacencyList) {
                if (nodes.get(0).equals(p)) {
-                    adjacencyList.remove(i);
+//                    adjacencyList.remove(i);
+                    toRemove.add(nodes);
                     success = true;
                }
                if (nodes.contains(p)) {
@@ -98,6 +100,9 @@ public class Graph implements GraphADT {
                }
                i++;
           }
+          
+          adjacencyList.removeAll(toRemove);
+          
           return success;
 	}
 
