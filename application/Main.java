@@ -290,6 +290,7 @@ public class Main extends Application {
 		Button exitButton = new Button("Exit");
 		exitButton.setPrefWidth(BUTTON_WIDTH);
 		exitButton.setOnAction(x -> {
+			exitApplication(primaryStage, fileChooser);
 			primaryStage.close();
 		});
 		
@@ -403,6 +404,10 @@ public class Main extends Application {
 		root.setTop(topRow);
 		root.setLeft(leftColumn);
 		root.setCenter(mainBox);
+		
+		primaryStage.setOnCloseRequest(x -> {
+			exitApplication(primaryStage, fileChooser);
+		});
 		
 		primaryStage.setTitle("ATeam 12 - Social Network");
 		primaryStage.setScene(mainScene);
@@ -585,6 +590,48 @@ public class Main extends Application {
 			reloadNetwork();
 			updateLastAction(ACTIONS.REMOVEFRIENDSHIP, user1, user2);
 		}
+		
+		return null;
+	}
+	
+	private EventHandler<? super MouseEvent> exitApplication(Stage primaryStage, FileChooser fileChooser) {
+		Stage stage = new Stage();
+		stage.setTitle("Exit");
+		VBox vbox = new VBox();
+		HBox hbox = new HBox();
+		Label label = new Label("Do you want to save and exit?");
+		Button b1 = new Button("Save and Exit");
+		Button b2 = new Button("Exit without Saving");
+		
+		b1.setOnAction(event -> {
+			File saveFile = fileChooser.showSaveDialog(primaryStage);
+			if (saveFile != null) {
+				try {
+					SocialNetwork.saveToFile(saveFile);
+				}
+				catch (IOException e) {
+					new Alert(AlertType.ERROR, "Unable to save file " + saveFile.getName()).show();
+				}
+			}
+			
+			stage.close();
+		});
+		
+		b2.setOnAction(event -> {
+			stage.close();
+		});
+		
+		hbox.getChildren().addAll(b1, b2);
+		hbox.setAlignment(Pos.CENTER);
+		hbox.setPadding(PADDING);
+		hbox.setSpacing(SMALL_SPACING);
+		
+		vbox.getChildren().addAll(label, hbox);
+		vbox.setAlignment(Pos.CENTER);
+		
+		Scene scene = new Scene(vbox, WINDOW_WIDTH/6, WINDOW_HEIGHT/6);
+		stage.setScene(scene);
+		stage.show();
 		
 		return null;
 	}
