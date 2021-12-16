@@ -49,27 +49,29 @@ public class Main extends Application {
 	private static final int WINDOW_WIDTH = 1400;
 	private static final int WINDOW_HEIGHT = 700;
 	private static final Insets PADDING = new Insets(10, 10, 10, 10);
-	private static final Font LABEL_FONT = new Font("Arial", 20);
+	private static final Font LABEL_FONT = new Font("Arial", 18);
 	private static final int SMALL_SPACING = 4;
 	private static final int BUTTON_WIDTH = 150;
 	private static final String DEFAULT_NUM_GROUP = "Nobody entered yet";
 	private static final int MIN_USER_NAME_WIDTH = 250;
-	private enum ACTIONS {
+	private enum STATUS {
 		NONE("No action taken"),
 		ADDPERSON("Added user"),
 		REMOVEPERSON("Removed user"),
 		ADDFRIENDSHIP("Added friendship"),
 		REMOVEFRIENDSHIP("Removed friendship"),
-		RESET("Reset Social Network");
+		RESET("Reset Social Network"),
+		NULLUSER("Error: null user entered"),
+		LOADFROMFILE("Load result: ");
 		
-		private String action;
+		private String status;
 
-		ACTIONS(String string) {
-			this.action = string;
+		STATUS(String string) {
+			this.status = string;
 		}
 		
 		private String getAction() {
-			return this.action;
+			return this.status;
 		}
 	}
 
@@ -79,7 +81,9 @@ public class Main extends Application {
 	private Label LastActionDisplayLabel = new Label("No action taken");
 	private Label NetworkLabel = new Label("No friendships have been entered");
 	private BorderPane NetworkDisplay = new BorderPane();
-	private Label NumberOfPeopleDisplayLabel = new Label(DEFAULT_NUM_GROUP);
+	private Label NumberOfGroupsDisplay = new Label(DEFAULT_NUM_GROUP);
+	private Label NumberOfPeopleDisplay = new Label(DEFAULT_NUM_GROUP);
+	private Label NumberOfFriendshipsDisplay = new Label(DEFAULT_NUM_GROUP);
 
 	@Override
 	public void start(Stage arg0) throws Exception {
@@ -87,7 +91,7 @@ public class Main extends Application {
 		HBox topRow = new HBox();
 		//BorderPane networkDisplay = new BorderPane();
 		VBox leftColumn = new VBox();
-		Label numberOfGroupsLabel = new Label("Number of Groups");
+		Label numberOfGroupsLabel = new Label("Number of Groups: ");
 		Stage primaryStage = new Stage();
 		Scene mainScene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
 		FindConnectView findConnectView = new FindConnectView();
@@ -117,8 +121,9 @@ public class Main extends Application {
 			File loadFile = fileChooser.showOpenDialog(primaryStage);
 			if (loadFile != null)
 				try {
-					SocialNetwork.loadFromFile(loadFile);
+					String results = SocialNetwork.loadFromFile(loadFile);
 					if (SocialNetwork.selectedUser != null) center = SocialNetwork.selectedUser.getName();
+					updateLastAction(STATUS.LOADFROMFILE, null, null, results);
 					reloadNetwork();
 					updateNumberOfGroups();
 				} catch (FileNotFoundException e) {
@@ -153,7 +158,7 @@ public class Main extends Application {
 			changeCenterUser(null);
 			reloadNetwork();
 			updateNumberOfGroups();
-			updateLastAction(ACTIONS.RESET, null, null);
+			updateLastAction(STATUS.RESET, null, null, null);
 		});
 		
 		/*
@@ -190,26 +195,26 @@ public class Main extends Application {
 		Button undo = new Button("Undo");
 		undo.setPrefWidth(BUTTON_WIDTH);
 		undo.setOnAction(x -> {
-			ACTIONS action = (ACTIONS) LastActionDisplayLabel.getProperties().get("action");
-			if(action != ACTIONS.NONE && action != ACTIONS.RESET) {
+			STATUS action = (STATUS) LastActionDisplayLabel.getProperties().get("action");
+			if(action != STATUS.NONE && action != STATUS.RESET) {
 				String user1 = (String) LastActionDisplayLabel.getProperties().get("user1");
-				if(action == ACTIONS.ADDPERSON) {
+				if(action == STATUS.ADDPERSON) {
 					if(SocialNetwork.removeUser(user1)) {
 						if(center.equals(user1))
 							changeCenterUser(null);
 						reloadNetwork();
-						updateLastAction(ACTIONS.REMOVEPERSON, user1, null);
+						updateLastAction(STATUS.REMOVEPERSON, user1, null, null);
 					}
 				}
-				else if(action == ACTIONS.REMOVEPERSON) {
+				else if(action == STATUS.REMOVEPERSON) {
 					addPersonOnClick(user1);
 				}
 				else {
 					String user2 = (String) LastActionDisplayLabel.getProperties().get("user2");
-					if(action == ACTIONS.ADDFRIENDSHIP) {
+					if(action == STATUS.ADDFRIENDSHIP) {
 						removeFriendshipOnClick(user1, user2);
 					}
-					else if(action == ACTIONS.REMOVEFRIENDSHIP) {
+					else if(action == STATUS.REMOVEFRIENDSHIP) {
 						addFriendshipOnClick(user1, user2);
 					}
 				}
@@ -303,13 +308,28 @@ public class Main extends Application {
 		/*
 		 * box for number of groups entered into the network
 		 */
-		VBox numberOfGroups = new VBox();
-		numberOfGroups.setPrefSize(400, 200);
+		VBox numberDisplay = new VBox();
+		numberDisplay.setPrefSize(400, 200);
+		HBox users = new HBox();
+		Label numberUsersLabel = new Label("Number of Users: ");
+		numberUsersLabel.setFont(LABEL_FONT);
+		NumberOfPeopleDisplay.setFont(LABEL_FONT);
+		users.getChildren().addAll(numberUsersLabel, NumberOfPeopleDisplay);
+		
+		HBox friendships = new HBox();
+		Label numberFriendships = new Label("Number of Frienships: ");
+		numberFriendships.setFont(LABEL_FONT);
+		NumberOfFriendshipsDisplay.setFont(LABEL_FONT);
+		friendships.getChildren().addAll(numberFriendships, NumberOfFriendshipsDisplay);
+		
+		
+		HBox groups = new HBox();
 		numberOfGroupsLabel.setFont(LABEL_FONT);
-		numberOfGroups.getChildren().add(numberOfGroupsLabel);
-		NumberOfPeopleDisplayLabel.setFont(new Font("Arial", 32));
-		numberOfGroups.getChildren().add(NumberOfPeopleDisplayLabel);
-		numberOfGroups.setAlignment(Pos.CENTER);
+		groups.getChildren().add(numberOfGroupsLabel);
+		NumberOfGroupsDisplay.setFont(LABEL_FONT);
+		groups.getChildren().add(NumberOfGroupsDisplay);
+		numberDisplay.getChildren().addAll(users, friendships, groups);
+		numberDisplay.setAlignment(Pos.CENTER);
 		
 		/*
 		 * box for mutual friends
@@ -349,7 +369,6 @@ public class Main extends Application {
 				LastActionDisplayLabel.setText("Mutual friends searched");
 			}
 		});
-		
 		HBox searchBoxes = new HBox();
 		searchBoxes.setPadding(PADDING);
 		searchBoxes.setSpacing(SMALL_SPACING);
@@ -370,7 +389,7 @@ public class Main extends Application {
 		/*
 		 * add boxes to column
 		 */
-		leftColumn.getChildren().addAll(numberOfGroups, mutualFriends, statusBox);
+		leftColumn.getChildren().addAll(numberDisplay, mutualFriends, statusBox);
 		
 		/*
 		 * setup right side with display
@@ -539,14 +558,18 @@ public class Main extends Application {
 	 * private helper method to update the number of groups that have been entered
 	 */
 	private void updateNumberOfGroups() {
-		NumberOfPeopleDisplayLabel.setText(SocialNetwork.getConnectedComponents() > 0 ? 
+		NumberOfGroupsDisplay.setText(SocialNetwork.getConnectedComponents() > 0 ? 
 				SocialNetwork.getConnectedComponents() + "" : DEFAULT_NUM_GROUP);
+		NumberOfPeopleDisplay.setText(SocialNetwork.graph.order() > 0 ?
+				SocialNetwork.graph.order() + "" : DEFAULT_NUM_GROUP);
+		NumberOfFriendshipsDisplay.setText(SocialNetwork.graph.size() > 0 ?
+				SocialNetwork.graph.size() + "" : DEFAULT_NUM_GROUP);
 	}
 	
 	/*
 	 * private helper method to update the last action label
 	 */
-	private void updateLastAction(ACTIONS action, String user1, String user2) {
+	private void updateLastAction(STATUS action, String user1, String user2, String results) {
 		String display;
 		switch (action) {
 		case ADDPERSON: display = action.getAction() + " " + user1;
@@ -561,32 +584,45 @@ public class Main extends Application {
 			break;
 		case RESET: display = action.getAction();
 			break;
-		default: display = ACTIONS.NONE.getAction();
+		case NULLUSER: display = action.getAction();
+			break;
+		case LOADFROMFILE: display = results;
+			break;
+		default: display = STATUS.NONE.getAction();
 		}
 		LastActionDisplayLabel.setText(display);
 		LastActionDisplayLabel.getProperties().put("action", action);
 		LastActionDisplayLabel.getProperties().put("user1", user1);
 		LastActionDisplayLabel.getProperties().put("user2", user2);
+		LastActionDisplayLabel.getProperties().put("results", results);
 	}
 	
 	private EventHandler<? super MouseEvent> addPersonOnClick(String user) {
+		if(user == null) {
+			updateLastAction(STATUS.NULLUSER, null, null, null);
+			return null;
+		}
+			
 		if(SocialNetwork.addUser(user)) {
-			if(center == null && user != null &&
-					SocialNetwork.personExists(user))
+			if(center == null && SocialNetwork.personExists(user))
 				changeCenterUser(user);
 			reloadNetwork();
 			updateNumberOfGroups();
-			updateLastAction(ACTIONS.ADDPERSON, user, null);
+			updateLastAction(STATUS.ADDPERSON, user, null, null);
 		}
 		return null;
 	}
 	
 	private EventHandler<? super MouseEvent> addFriendshipOnClick(String user1,
 			String user2) {
+		if(user1 == null || user2 == null) {
+			updateLastAction(STATUS.NULLUSER, null, null, null);
+			return null;
+		}
 		if(SocialNetwork.addFriends(user1, user2)) {
 			reloadNetwork();
 			updateNumberOfGroups();
-			updateLastAction(ACTIONS.ADDFRIENDSHIP, user1, user2);
+			updateLastAction(STATUS.ADDFRIENDSHIP, user1, user2, null);
 		}
 		
 		return null;
@@ -594,10 +630,14 @@ public class Main extends Application {
 	
 	private EventHandler<? super MouseEvent> removeFriendshipOnClick(String user1,
 			String user2) {
+		if(user1 == null || user2 == null) {
+			updateLastAction(STATUS.NULLUSER, null, null, null);
+			return null;
+		}
 		if(SocialNetwork.removeFriends(user1, user2)) {
 			updateNumberOfGroups();
 			reloadNetwork();
-			updateLastAction(ACTIONS.REMOVEFRIENDSHIP, user1, user2);
+			updateLastAction(STATUS.REMOVEFRIENDSHIP, user1, user2, null);
 		}
 		
 		return null;
