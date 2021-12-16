@@ -31,4 +31,4 @@ run: classes
 clean:
 	$(RM) *.class
 jar:
-	jar -cvmf executable.jar .
+	jar -cvmf manifest.txt executable.jar .
