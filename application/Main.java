@@ -334,11 +334,16 @@ public class Main extends Application {
 			mutualFriendsTable.getItems().clear();
 			String user1 = person1.getText();
 			String user2 = person2.getText();
-			if(user1 != null && user2 != null) {
+			if (!SocialNetwork.personExists(user1)) LastActionDisplayLabel.setText(user1 + 
+					" does not exist in the Social Network");
+			else if (!SocialNetwork.personExists(user2)) LastActionDisplayLabel.setText(user2 + 
+					" does not exist in the Social Network");
+			else if(user1 != null && user2 != null) {
 				Set<Person> mutuals = SocialNetwork.getMutualFriends(user1, user2);
 				for(Person person : mutuals) {
 					mutualFriendsTable.getItems().add(person);
 				}
+//				else LastActionDisplayLabel.setText("Mutual friends don't exist in Social Network");
 			}
 		});
 		HBox searchBoxes = new HBox();
