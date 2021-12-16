@@ -271,9 +271,16 @@ public class SocialNetwork implements SocialNetworkADT{
 		}
 	}
 
-
+	/**
+	 * load from a save file
+	 * 
+	 * @param f - filepath object from GUI
+	 * @return Action message + invalid line count
+	 */
 	@Override
-	public void loadFromFile(File f) throws FileNotFoundException {
+	public String loadFromFile(File f) throws FileNotFoundException {
+		String message = "";
+		int errorCount = 0;
 		Scanner input = new Scanner(f);
 
 		while (input.hasNextLine()) {
@@ -292,13 +299,20 @@ public class SocialNetwork implements SocialNetworkADT{
 					selectedUser = graph.getNode(lineArray[1]);
 					break;
 				default:
-					System.out.println("Invalid command.");
+					errorCount += 1;
 			}
 		}
-
+		message = "File loaded.";
+		if (errorCount != 0) {message = message + "\n" + Integer.toString(errorCount) + " invalid entries."; }
 		input.close();
+		return message;
 	}
 
+	/**
+	 * Save actions to text file
+	 * 
+	 * @param f filepath object from GUI
+	 */
 	@Override
 	public void saveToFile(File f) throws IOException {
 		FileWriter output = new FileWriter(f);
@@ -309,8 +323,23 @@ public class SocialNetwork implements SocialNetworkADT{
 		output.close();
 	}
 	
+	/**
+	 * check if person exists in graph
+	 * @param user - user name to check
+	 * @return true if person exists, otherwise false
+	 */
 	public boolean personExists(String user) {
 		return graph.getNode(user) != null ? true : false;
+	}
+
+	/**
+	 * appends logfile with last action
+	 * @param f filepath object from GUI
+	 */
+	public void logFile(File f) throws IOException {
+		FileWriter output = new FileWriter(f, true); // open a new filewriter in append mode
+		output.write(commands.get(commands.size()-1)); //write last command
+		output.close(); // close the filewriter
 	}
 	
 }

@@ -37,7 +37,9 @@ public interface SocialNetworkADT {
 
     public int getConnectedComponents();
 
-    public void loadFromFile(File f) throws FileNotFoundException;
+    public String loadFromFile(File f) throws FileNotFoundException;
 
     public void saveToFile(File f) throws IOException;
+
+    public void logFile(File f) throws IOException;
 }
